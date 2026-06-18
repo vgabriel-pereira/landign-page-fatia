@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Produtos: leitura pública, escrita apenas autenticada
+    match /produtos/{produtoId} {
+      allow read:  if true;
+      allow write: if request.auth != null;
+    }
+
+    // Avaliações:
+    // - Leitura pública apenas das aprovadas
+    // - Qualquer pessoa pode CRIAR (enviar avaliação)
+    // - Apenas autenticado pode ATUALIZAR ou DELETAR (moderar)
+    match /avaliacoes/{avaliacaoId} {
+      allow read:   if resource.data.aprovada == true
+                    || request.auth != null;
+      allow create: if request.resource.data.keys().hasAll(['nome','mensagem','estrelas','aprovada','criadaEm'])
+                    && request.resource.data.aprovada == false
+                    && request.resource.data.estrelas is int
+                    && request.resource.data.estrelas >= 1
+                    && request.resource.data.estrelas <= 5
+                    && request.resource.data.mensagem.size() <= 500
+                    && request.resource.data.nome.size() <= 80;
+      allow update, delete: if request.auth != null;
+    }
+
+    // Bloqueia tudo o mais por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

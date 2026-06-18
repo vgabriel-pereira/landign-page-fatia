@@ -1,0 +1,15 @@
+# Nunca commitar credenciais ou arquivos locais
+.env
+.env.local
+*.env
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+
+# Dependências (caso use npm futuramente)
+node_modules/
