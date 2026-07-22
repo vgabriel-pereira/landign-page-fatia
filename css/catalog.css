@@ -24,7 +24,7 @@
   background-size: 28px 28px;
   pointer-events: none;
 }
-.hero-logo    { width: 200px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 4px 24px rgba(0,0,0,0.18)); }
+.hero-logo    { width: 240px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 4px 24px rgba(0,0,0,0.18)); }
 .hero-eyebrow { font-weight: 300; font-size: 0.7rem; letter-spacing: 5px; text-transform: uppercase; color: var(--dourado); opacity: 0.8; margin-bottom: 1rem; }
 .hero-headline { font-family: var(--font-display); font-style: italic; font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 400; color: var(--dourado); line-height: 1.1; margin-bottom: 1.25rem; max-width: 700px; }
 .hero-sub { font-weight: 300; font-size: clamp(0.9rem, 2vw, 1.1rem); color: rgba(255,255,255,0.75); letter-spacing: 0.5px; line-height: 1.7; max-width: 440px; margin-bottom: 2.5rem; }
@@ -247,7 +247,7 @@
 
 /* ── Responsivo ── */
 @media (max-width: 640px) {
-  .hero-logo  { width: 140px; }
+  .hero-logo  { width: 170px; }
   .hero-ctas  { flex-direction: column; align-items: center; }
   .hero-ctas .btn { width: 100%; justify-content: center; max-width: 280px; }
   .sobre      { flex-direction: column; gap: 2rem; }

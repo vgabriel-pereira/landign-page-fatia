@@ -118,12 +118,15 @@ async function carregarProdutos() {
 }
 
 function renderizarLinha(p) {
+  const imagemUrl = escaparAdmin(p.imagemUrl || '');
+  const nome = escaparAdmin(p.nome || '');
+  const categoria = escaparAdmin(p.categoria || '—');
   return `
     <div class="produto-row">
-      <img class="produto-row__thumb" src="${p.imagemUrl}" alt="${p.nome}" onerror="this.src='/assets/placeholder.jpg'" />
+      <img class="produto-row__thumb" src="${imagemUrl}" alt="${nome}" onerror="this.remove()" />
       <div class="produto-row__info">
-        <div class="produto-row__nome">${p.nome}</div>
-        <div class="produto-row__cat">${p.categoria || '—'}</div>
+        <div class="produto-row__nome">${nome}</div>
+        <div class="produto-row__cat">${categoria}</div>
       </div>
       <div class="produto-row__acoes">
         <label class="toggle" title="Disponível no catálogo">
@@ -257,10 +260,12 @@ async function deletarAvaliacao(id) {
 }
 
 function escaparAdmin(str = '') {
-  return str
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /* ════════════════════════════════════════
@@ -304,9 +309,11 @@ function iniciarUpload() {
       mostrarToast('Cada imagem deve ter no máximo 5MB.', 'erro');
       return;
     }
-    arquivosSelecionados = files;
-    previewImagens.innerHTML = files.map(file => `<img src="${URL.createObjectURL(file)}" alt="Prévia de ${file.name}">`).join('');
+    const existentes = new Set(arquivosSelecionados.map(file => `${file.name}-${file.size}-${file.lastModified}`));
+    arquivosSelecionados = [...arquivosSelecionados, ...files.filter(file => !existentes.has(`${file.name}-${file.size}-${file.lastModified}`))];
+    previewImagens.innerHTML = arquivosSelecionados.map(file => `<img src="${URL.createObjectURL(file)}" alt="Prévia de ${escaparAdmin(file.name)}">`).join('');
     preview?.classList.add('visivel');
+    inputFile.value = '';
   }
 
   // Submit do formulário

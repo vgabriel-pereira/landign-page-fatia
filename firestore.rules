@@ -20,8 +20,12 @@ service cloud.firestore {
                     && request.resource.data.estrelas is int
                     && request.resource.data.estrelas >= 1
                     && request.resource.data.estrelas <= 5
-                    && request.resource.data.mensagem.size() <= 500
-                    && request.resource.data.nome.size() <= 80;
+                    && request.resource.data.nome is string
+                    && request.resource.data.nome.size() > 0
+                    && request.resource.data.nome.size() <= 80
+                    && request.resource.data.mensagem is string
+                    && request.resource.data.mensagem.size() > 0
+                    && request.resource.data.mensagem.size() <= 500;
       allow update, delete: if request.auth != null;
     }
 
