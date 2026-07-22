@@ -47,6 +47,8 @@ async function carregarAvaliacoes() {
     const lista = snapshot.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.criadaEm?.toMillis?.() ?? 0) - (a.criadaEm?.toMillis?.() ?? 0));
+    const resumo = document.getElementById('avaliacoes-resumo');
+    if (resumo) resumo.textContent = lista.length ? `★ ${(lista.reduce((s, av) => s + av.estrelas, 0) / lista.length).toFixed(1).replace('.', ',')}/5 · ${lista.length} ${lista.length === 1 ? 'avaliação' : 'avaliações'}` : '';
 
     if (lista.length === 0) {
       grid.innerHTML = `<p class="av-vazio">Seja o primeiro a avaliar! ♥</p>`;
@@ -108,6 +110,8 @@ function atualizarVisualizacaoEstrelas() {
     btn.classList.toggle('selecionada', val <= estrelaSelecionada);
     btn.setAttribute('aria-pressed', val <= estrelaSelecionada ? 'true' : 'false');
   });
+  const status = document.getElementById('estrelas-status');
+  if (status) status.textContent = `${estrelaSelecionada} de 5 estrelas selecionadas`;
 }
 
 /* ── Contador de caracteres ── */
@@ -126,9 +130,13 @@ function iniciarFormulario() {
 
     const nome     = inputNome?.value.trim();
     const mensagem = inputMsg?.value.trim();
+    const honeypot = document.getElementById('av-site')?.value.trim();
     const erroEl   = document.getElementById('avaliacao-erro');
 
     // Validações
+    if (honeypot) return;
+    const ultimoEnvio = Number(localStorage.getItem('fatia-avaliacao-enviada-em') || 0);
+    if (Date.now() - ultimoEnvio < 60000) { mostrarErro(erroEl, 'Aguarde um minuto antes de enviar outra avaliação.'); return; }
     if (!nome) { mostrarErro(erroEl, 'Por favor, informe seu nome.'); return; }
     if (estrelaSelecionada === 0) { mostrarErro(erroEl, 'Selecione pelo menos 1 estrela.'); return; }
     if (!mensagem) { mostrarErro(erroEl, 'Escreva uma mensagem antes de enviar.'); return; }
@@ -148,6 +156,7 @@ function iniciarFormulario() {
         aprovada:  false,           // Vai para moderação antes de aparecer
         criadaEm:  serverTimestamp()
       });
+      localStorage.setItem('fatia-avaliacao-enviada-em', String(Date.now()));
 
       // Mostra mensagem de sucesso e esconde o form
       form.style.display = 'none';

@@ -7,7 +7,7 @@
   <meta name="description" content="Doces e bolos artesanais feitos com amor em Brasília. Encomende pelo WhatsApp." />
   <meta property="og:title"       content="Fatia da Vida — Doces Artesanais" />
   <meta property="og:description" content="Bolos e doces artesanais feitos com carinho. Encomende pelo WhatsApp." />
-  <meta property="og:image"       content="assets/og-image.jpg" />
+  <meta property="og:image"       content="assets/logo.png" />
   <meta property="og:type"        content="website" />
   <link rel="icon" type="image/png" href="assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -60,6 +60,10 @@
       </svg>
     </div>
   </section>
+
+  <aside class="faixa-confianca" aria-label="Informações de atendimento">
+    <span>Brasília e região</span><span>Retirada ou entrega a combinar</span><span>Prazo e pagamento sob consulta</span>
+  </aside>
 
   <!-- ══ COMO FUNCIONA ══ -->
   <section class="como-funciona" aria-labelledby="como-titulo">
@@ -116,6 +120,7 @@
       <header class="avaliacoes__header">
         <h2 id="avaliacoes-titulo">O que dizem por aí</h2>
         <p>Avaliações de clientes reais, com muito carinho.</p>
+        <p id="avaliacoes-resumo" class="avaliacoes__resumo" aria-live="polite"></p>
       </header>
 
       <!-- Grid de avaliações aprovadas (preenchido pelo reviews.js) -->
@@ -143,10 +148,15 @@
             <button type="button" class="estrela-input" data-valor="4" aria-label="4 estrelas" aria-pressed="false">★</button>
             <button type="button" class="estrela-input" data-valor="5" aria-label="5 estrelas" aria-pressed="false">★</button>
           </div>
+          <p id="estrelas-status" class="sr-only" aria-live="polite"></p>
 
           <div class="av-campo">
             <label for="av-nome">Seu nome *</label>
             <input type="text" id="av-nome" name="nome" maxlength="80" required placeholder="Ex: Ana Paula" autocomplete="name" />
+          </div>
+          <div class="av-honeypot" aria-hidden="true">
+            <label for="av-site">Não preencha este campo</label>
+            <input type="text" id="av-site" name="site" tabindex="-1" autocomplete="off" />
           </div>
 
           <div class="av-campo">
@@ -213,6 +223,9 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <img id="lightbox-img" class="lightbox__img" src="" alt="" />
+    <button id="lightbox-prev" class="lightbox__nav lightbox__nav--prev" type="button" aria-label="Imagem anterior">‹</button>
+    <button id="lightbox-next" class="lightbox__nav lightbox__nav--next" type="button" aria-label="Próxima imagem">›</button>
+    <p id="lightbox-count" class="lightbox__count" aria-live="polite"></p>
   </div>
 
   <script type="module" src="js/catalog.js"></script>

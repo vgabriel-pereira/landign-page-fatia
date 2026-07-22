@@ -111,6 +111,7 @@ async function carregarProdutos() {
     lista.querySelectorAll('[data-deletar]').forEach(el => {
       el.addEventListener('click', () => confirmarExclusao(el.dataset.deletar, el.dataset.storageUrl));
     });
+    lista.querySelectorAll('[data-editar]').forEach(el => el.addEventListener('click', () => editarProduto(el)));
 
   } catch (err) {
     console.error('Erro ao carregar lista:', err);
@@ -133,6 +134,7 @@ function renderizarLinha(p) {
           <input type="checkbox" data-toggle="${p.id}" ${p.disponivel ? 'checked' : ''} />
           <span class="toggle__track"></span>
         </label>
+        <button class="btn-icon" data-editar="${p.id}" data-nome="${nome}" data-descricao="${escaparAdmin(p.descricao || '')}" data-preco="${escaparAdmin(p.preco || '')}" data-prazo="${escaparAdmin(p.prazo || '')}" title="Editar produto">✎</button>
         <button class="btn-icon deletar" data-deletar="${p.id}" data-storage-url="${p.storageRef || ''}" title="Excluir produto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -140,6 +142,20 @@ function renderizarLinha(p) {
         </button>
       </div>
     </div>`;
+}
+
+async function editarProduto(botao) {
+  const nome = prompt('Nome do produto:', botao.dataset.nome);
+  if (nome === null || !nome.trim()) return;
+  const descricao = prompt('Descrição:', botao.dataset.descricao);
+  const preco = prompt('Preço a partir de (opcional):', botao.dataset.preco);
+  const prazo = prompt('Prazo de encomenda (opcional):', botao.dataset.prazo);
+  if (descricao === null || preco === null || prazo === null) return;
+  try {
+    await updateDoc(doc(db, 'produtos', botao.dataset.editar), { nome: nome.trim(), descricao: descricao.trim(), preco: preco.trim(), prazo: prazo.trim() });
+    mostrarToast('Produto atualizado.', 'sucesso');
+    await carregarProdutos();
+  } catch (err) { console.error(err); mostrarToast('Erro ao atualizar produto.', 'erro'); }
 }
 
 /* ── Toggle disponível ── */
@@ -311,9 +327,17 @@ function iniciarUpload() {
     }
     const existentes = new Set(arquivosSelecionados.map(file => `${file.name}-${file.size}-${file.lastModified}`));
     arquivosSelecionados = [...arquivosSelecionados, ...files.filter(file => !existentes.has(`${file.name}-${file.size}-${file.lastModified}`))];
-    previewImagens.innerHTML = arquivosSelecionados.map(file => `<img src="${URL.createObjectURL(file)}" alt="Prévia de ${escaparAdmin(file.name)}">`).join('');
+    renderizarPreviews();
     preview?.classList.add('visivel');
     inputFile.value = '';
+  }
+
+  function renderizarPreviews() {
+    previewImagens.innerHTML = arquivosSelecionados.map((file, indice) => `<div class="preview-item"><img src="${URL.createObjectURL(file)}" alt="Prévia de ${escaparAdmin(file.name)}"><button type="button" data-remover-imagem="${indice}" aria-label="Remover imagem">×</button></div>`).join('');
+    previewImagens.querySelectorAll('[data-remover-imagem]').forEach(btn => btn.addEventListener('click', () => {
+      arquivosSelecionados.splice(Number(btn.dataset.removerImagem), 1);
+      if (arquivosSelecionados.length) renderizarPreviews(); else preview?.classList.remove('visivel');
+    }));
   }
 
   // Submit do formulário
@@ -324,6 +348,8 @@ function iniciarUpload() {
     const nome      = form.nome.value.trim();
     const categoria = form.categoria.value;
     const descricao = form.descricao.value.trim();
+    const preco     = form.preco.value.trim();
+    const prazo     = form.prazo.value.trim();
     const destaque  = form.destaque?.checked || false;
 
     if (!nome || !categoria) { mostrarToast('Preencha o nome e a categoria.', 'erro'); return; }
@@ -353,6 +379,8 @@ function iniciarUpload() {
         nome,
         categoria,
         descricao,
+        preco,
+        prazo,
         destaque,
         // imagemUrl/storageRef mantêm compatibilidade com produtos já cadastrados.
         imagemUrl: imagens[0].url,

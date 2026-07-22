@@ -114,7 +114,9 @@
 .upload-preview { display: none; margin-bottom: 1.5rem; }
 .upload-preview.visivel { display: block; }
 .preview-imagens { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: .75rem; }
+.preview-item { position: relative; }
 .preview-imagens img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-md); }
+.preview-item button { position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; border-radius: 50%; background: rgba(27,58,92,.85); color: #fff; font-size: 1.25rem; line-height: 1; }
 
 .upload-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 560px) { .upload-form-grid { grid-template-columns: 1fr; } }
