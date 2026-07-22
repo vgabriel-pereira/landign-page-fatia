@@ -9,7 +9,6 @@ import {
   addDoc,
   query,
   where,
-  orderBy,
   getDocs,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -42,10 +41,12 @@ async function carregarAvaliacoes() {
     const q = query(
       collection(db, 'avaliacoes'),
       where('aprovada', '==', true),
-      orderBy('criadaEm', 'desc')
+      // Ordenação no navegador: esta consulta só precisa do filtro simples.
     );
     const snapshot = await getDocs(q);
-    const lista = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const lista = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.criadaEm?.toMillis?.() ?? 0) - (a.criadaEm?.toMillis?.() ?? 0));
 
     if (lista.length === 0) {
       grid.innerHTML = `<p class="av-vazio">Seja o primeiro a avaliar! ♥</p>`;

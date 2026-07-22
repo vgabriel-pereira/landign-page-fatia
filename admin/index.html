@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Painel — Fatia da Vida</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="../assets/favicon.ico" />
+  <link rel="icon" type="image/png" href="../assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
@@ -81,16 +81,16 @@
               <polyline points="21 15 16 10 5 21"/>
             </svg>
           </div>
-          <p>Toque aqui para tirar uma foto ou escolher da galeria</p>
-          <span>JPG, PNG ou WEBP · até 5MB</span>
+          <p>Toque aqui para tirar fotos ou escolher imagens da galeria</p>
+          <span>JPG, PNG ou WEBP · até 5MB por imagem</span>
         </div>
 
         <!-- Input file (captura câmera no mobile) -->
-        <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none" aria-hidden="true" />
+        <input type="file" id="input-foto" accept="image/*" multiple style="display:none" aria-hidden="true" />
 
         <!-- Preview da imagem -->
         <div id="upload-preview" class="upload-preview" aria-live="polite">
-          <img id="preview-img" src="" alt="Prévia da foto selecionada" />
+          <div id="preview-imagens" class="preview-imagens"></div>
         </div>
 
         <!-- Formulário do produto -->

@@ -270,13 +270,13 @@ function iniciarUpload() {
   const zona       = document.getElementById('upload-zona');
   const inputFile  = document.getElementById('input-foto');
   const preview    = document.getElementById('upload-preview');
-  const previewImg = document.getElementById('preview-img');
+  const previewImagens = document.getElementById('preview-imagens');
   const form       = document.getElementById('form-produto');
   const progressBar= document.getElementById('upload-progress');
 
   if (!zona || !inputFile) return;
 
-  let arquivoSelecionado = null;
+  let arquivosSelecionados = [];
 
   // Clique na zona abre o seletor de arquivo (câmera no mobile)
   zona.addEventListener('click', () => inputFile.click());
@@ -287,30 +287,32 @@ function iniciarUpload() {
   zona.addEventListener('drop', e => {
     e.preventDefault();
     zona.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) selecionarArquivo(file);
+    selecionarArquivos([...e.dataTransfer.files]);
   });
 
   inputFile.addEventListener('change', () => {
-    if (inputFile.files[0]) selecionarArquivo(inputFile.files[0]);
+    selecionarArquivos([...inputFile.files]);
   });
 
-  function selecionarArquivo(file) {
-    if (!file.type.startsWith('image/')) {
-      mostrarToast('Por favor, selecione uma imagem.', 'erro');
+  function selecionarArquivos(files) {
+    if (!files.length) return;
+    if (files.some(file => !file.type.startsWith('image/'))) {
+      mostrarToast('Selecione apenas arquivos de imagem.', 'erro');
       return;
     }
-    arquivoSelecionado = file;
-    const url = URL.createObjectURL(file);
-    previewImg.src = url;
+    if (files.some(file => file.size > 5 * 1024 * 1024)) {
+      mostrarToast('Cada imagem deve ter no máximo 5MB.', 'erro');
+      return;
+    }
+    arquivosSelecionados = files;
+    previewImagens.innerHTML = files.map(file => `<img src="${URL.createObjectURL(file)}" alt="Prévia de ${file.name}">`).join('');
     preview?.classList.add('visivel');
-    zona.style.display = 'none';
   }
 
   // Submit do formulário
   form?.addEventListener('submit', async e => {
     e.preventDefault();
-    if (!arquivoSelecionado) { mostrarToast('Selecione uma foto antes de salvar.', 'erro'); return; }
+    if (!arquivosSelecionados.length) { mostrarToast('Selecione pelo menos uma foto antes de salvar.', 'erro'); return; }
 
     const nome      = form.nome.value.trim();
     const categoria = form.categoria.value;
@@ -324,17 +326,17 @@ function iniciarUpload() {
     btnSalvar.textContent = 'Enviando…';
 
     try {
-      // 1. Upload da imagem no Storage
-      const storageRef = ref(storage, `produtos/${Date.now()}_${arquivoSelecionado.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, arquivoSelecionado);
-
-      uploadTask.on('state_changed', snapshot => {
-        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        if (progressBar) progressBar.value = pct;
-      });
-
-      await uploadTask;
-      const imagemUrl = await getDownloadURL(storageRef);
+      // 1. Faz upload de todas as imagens selecionadas.
+      const baseNome = Date.now();
+      const uploads = arquivosSelecionados.map((arquivo, indice) => new Promise((resolve, reject) => {
+        const storageRef = ref(storage, `produtos/${baseNome}_${indice}_${arquivo.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, arquivo);
+        uploadTask.on('state_changed', snapshot => {
+          const pctArquivo = snapshot.bytesTransferred / snapshot.totalBytes;
+          if (progressBar) progressBar.value = Math.round(((indice + pctArquivo) / arquivosSelecionados.length) * 100);
+        }, reject, async () => resolve({ url: await getDownloadURL(storageRef), storageRef: storageRef.fullPath }));
+      }));
+      const imagens = await Promise.all(uploads);
 
       // 2. Salva no Firestore
       const snapshot = await getDocs(collection(db, 'produtos'));
@@ -345,8 +347,11 @@ function iniciarUpload() {
         categoria,
         descricao,
         destaque,
-        imagemUrl,
-        storageRef: storageRef.fullPath,
+        // imagemUrl/storageRef mantêm compatibilidade com produtos já cadastrados.
+        imagemUrl: imagens[0].url,
+        imagensUrls: imagens.map(imagem => imagem.url),
+        storageRef: imagens[0].storageRef,
+        storageRefs: imagens.map(imagem => imagem.storageRef),
         disponivel: true,
         ordem,
         criadoEm: serverTimestamp()
@@ -354,9 +359,9 @@ function iniciarUpload() {
 
       mostrarToast(`"${nome}" publicado com sucesso! 🎉`, 'sucesso');
       form.reset();
-      arquivoSelecionado = null;
+      arquivosSelecionados = [];
+      previewImagens.innerHTML = '';
       preview?.classList.remove('visivel');
-      zona.style.display = '';
       if (progressBar) progressBar.value = 0;
       await carregarProdutos();
 

@@ -24,7 +24,7 @@
   background-size: 28px 28px;
   pointer-events: none;
 }
-.hero-logo    { width: 120px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 4px 24px rgba(0,0,0,0.18)); }
+.hero-logo    { width: 200px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 4px 24px rgba(0,0,0,0.18)); }
 .hero-eyebrow { font-weight: 300; font-size: 0.7rem; letter-spacing: 5px; text-transform: uppercase; color: var(--dourado); opacity: 0.8; margin-bottom: 1rem; }
 .hero-headline { font-family: var(--font-display); font-style: italic; font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 400; color: var(--dourado); line-height: 1.1; margin-bottom: 1.25rem; max-width: 700px; }
 .hero-sub { font-weight: 300; font-size: clamp(0.9rem, 2vw, 1.1rem); color: rgba(255,255,255,0.75); letter-spacing: 0.5px; line-height: 1.7; max-width: 440px; margin-bottom: 2.5rem; }
@@ -85,6 +85,13 @@
 .produto-card__img-wrap { position: relative; aspect-ratio: 1; overflow: hidden; cursor: pointer; }
 .produto-card__img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
 .produto-card:hover .produto-card__img-wrap img { transform: scale(1.04); }
+.produto-card__slide { position: absolute; inset: 0; opacity: 0; transition: opacity .25s ease; }
+.produto-card__slide.ativa { opacity: 1; }
+.produto-card__nav { position: absolute; z-index: 2; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; background: rgba(27,58,92,.72); color: #fff; font-size: 1.4rem; display: grid; place-items: center; }
+.produto-card__nav--anterior { left: 8px; } .produto-card__nav--proxima { right: 8px; }
+.produto-card__indicadores { position: absolute; z-index: 2; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+.produto-card__indicador { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.55); }
+.produto-card__indicador.ativo { background: #fff; }
 
 .produto-card__badge {
   position: absolute;
@@ -240,7 +247,7 @@
 
 /* ── Responsivo ── */
 @media (max-width: 640px) {
-  .hero-logo  { width: 90px; }
+  .hero-logo  { width: 140px; }
   .hero-ctas  { flex-direction: column; align-items: center; }
   .hero-ctas .btn { width: 100%; justify-content: center; max-width: 280px; }
   .sobre      { flex-direction: column; gap: 2rem; }
