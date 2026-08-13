@@ -206,6 +206,14 @@
 .categoria-item__acoes { display: flex; gap: .5rem; }
 .categoria-vazia { color: var(--ds-text-muted); font-size: .9rem; padding: 1rem 0; text-align: center; }
 
+/* Modal — componente do design system */
+.modal { border: 0; background: transparent; max-width: min(92vw, 620px); padding: 0; width: 100%; }
+.modal::backdrop { background: rgba(27, 58, 92, .65); }
+.modal__content { background: var(--ds-surface); border-radius: var(--radius-lg); box-shadow: 0 16px 48px rgba(27, 58, 92, .28); padding: 1.75rem; }
+.modal__header { align-items: flex-start; display: flex; gap: 1rem; justify-content: space-between; margin-bottom: 1.5rem; }
+.modal__header h2 { font-size: 1.35rem; font-style: italic; }
+.modal__actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
 /* ── Toast de feedback ── */
 .toast {
   position: fixed;
@@ -250,4 +258,6 @@
   .admin-sidebar { display: none; }
   .admin-main    { padding: 1.5rem; }
   .admin-section__header { align-items: flex-start; flex-direction: column; }
+  .modal__actions { flex-direction: column-reverse; }
+  .modal__actions .btn { justify-content: center; width: 100%; }
 }
