@@ -4,7 +4,7 @@
 ═══════════════════════════════════════════ */
 
 /* ── Layout base ── */
-.admin-body { background: #f0f4f8; min-height: 100vh; }
+.admin-body { background: var(--ds-surface-subtle); min-height: 100vh; }
 
 /* ── Tela de login ── */
 .login-page {
@@ -49,6 +49,9 @@
 .campo select:focus,
 .campo textarea:focus { outline: none; border-color: var(--ardosia); }
 .campo textarea { resize: vertical; min-height: 80px; }
+.campo input:focus-visible,
+.campo select:focus-visible,
+.campo textarea:focus-visible { box-shadow: var(--ds-focus-ring); }
 
 /* ── Admin layout ── */
 .admin-layout { display: flex; min-height: 100vh; }
@@ -190,6 +193,19 @@
 .btn-icon.deletar:hover { border-color: #e53e3e; color: #e53e3e; }
 .btn-icon svg { width: 16px; height: 16px; }
 
+/* Categorias — componente de lista do design system do painel */
+.categorias-admin { background: var(--ds-surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: 1.5rem; margin-top: 2rem; }
+.admin-section__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.admin-section__header h2 { font-size: 1.2rem; font-style: italic; }
+.eyebrow { font-size: .68rem; color: var(--ds-text-muted); font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+.admin-section__description { color: var(--ds-text-muted); font-size: .85rem; margin: .75rem 0 1.25rem; }
+.categorias-lista { display: grid; gap: .75rem; }
+.categoria-item { align-items: center; background: #f8fafc; border: 1px solid var(--ds-border); border-radius: var(--radius-md); display: flex; gap: 1rem; justify-content: space-between; padding: .875rem 1rem; }
+.categoria-item__nome { font-weight: 700; font-size: .95rem; }
+.categoria-item__slug { color: var(--ds-text-muted); font-size: .75rem; margin-top: .15rem; }
+.categoria-item__acoes { display: flex; gap: .5rem; }
+.categoria-vazia { color: var(--ds-text-muted); font-size: .9rem; padding: 1rem 0; text-align: center; }
+
 /* ── Toast de feedback ── */
 .toast {
   position: fixed;
@@ -233,4 +249,5 @@
 @media (max-width: 768px) {
   .admin-sidebar { display: none; }
   .admin-main    { padding: 1.5rem; }
+  .admin-section__header { align-items: flex-start; flex-direction: column; }
 }

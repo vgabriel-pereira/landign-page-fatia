@@ -12,6 +12,7 @@ import {
 import {
   collection,
   addDoc,
+  setDoc,
   getDocs,
   doc,
   updateDoc,
@@ -78,10 +79,95 @@ document.getElementById('btn-sair')?.addEventListener('click', async () => {
    MÓDULO: PAINEL PRINCIPAL
 ════════════════════════════════════════ */
 async function iniciarPainel(usuario) {
+  await iniciarCategorias();
   await carregarProdutos();
   await carregarAvaliacoes();
   iniciarUpload();
 }
+
+/* Categorias do catálogo */
+const CATEGORIAS_INICIAIS = [['bolo', 'Bolos'], ['torta', 'Tortas'], ['doce', 'Doces'], ['aniversario', 'Aniversário'], ['casamento', 'Casamento']];
+let categorias = [];
+
+async function iniciarCategorias() {
+  document.getElementById('btn-nova-categoria')?.addEventListener('click', criarCategoria);
+  await carregarCategorias();
+}
+
+async function carregarCategorias() {
+  try {
+    const snapshot = await getDocs(collection(db, 'categorias'));
+    categorias = snapshot.docs.map(item => ({ id: item.id, ...item.data() })).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+    if (!categorias.length) {
+      const produtosExistentes = await getDocs(collection(db, 'produtos'));
+      // Migração de compatibilidade: só cria a lista legada quando já há catálogo.
+      if (!produtosExistentes.empty) {
+        await Promise.all(CATEGORIAS_INICIAIS.map(([slug, nome], ordem) => setDoc(doc(db, 'categorias', slug), { nome, slug, ordem, criadaEm: serverTimestamp() })));
+        return carregarCategorias();
+      }
+    }
+    preencherSelectCategorias();
+    renderizarCategorias();
+  } catch (err) {
+    console.error('Erro ao carregar categorias:', err);
+    mostrarToast('Não foi possível carregar as categorias.', 'erro');
+  }
+}
+
+function preencherSelectCategorias() {
+  const select = document.getElementById('categoria');
+  if (!select) return;
+  const selecionada = select.value;
+  select.innerHTML = '<option value="" disabled selected>Selecione…</option>' + categorias.map(c => `<option value="${escaparAdmin(c.slug)}">${escaparAdmin(c.nome)}</option>`).join('');
+  if (categorias.some(c => c.slug === selecionada)) select.value = selecionada;
+}
+
+function renderizarCategorias() {
+  const lista = document.getElementById('lista-categorias');
+  if (!lista) return;
+  lista.innerHTML = categorias.map(c => `<div class="categoria-item"><div><div class="categoria-item__nome">${escaparAdmin(c.nome)}</div><div class="categoria-item__slug">${escaparAdmin(c.slug)}</div></div><div class="categoria-item__acoes"><button class="btn-icon" type="button" data-editar-categoria="${escaparAdmin(c.id)}" title="Editar categoria">✎</button><button class="btn-icon deletar" type="button" data-excluir-categoria="${escaparAdmin(c.id)}" data-slug="${escaparAdmin(c.slug)}" title="Excluir categoria">⌫</button></div></div>`).join('') || '<p class="categoria-vazia">Nenhuma categoria cadastrada.</p>';
+  lista.querySelectorAll('[data-editar-categoria]').forEach(btn => btn.addEventListener('click', () => editarCategoria(btn.dataset.editarCategoria)));
+  lista.querySelectorAll('[data-excluir-categoria]').forEach(btn => btn.addEventListener('click', () => excluirCategoria(btn.dataset.excluirCategoria, btn.dataset.slug)));
+}
+
+async function criarCategoria() {
+  const nome = prompt('Nome da nova categoria:');
+  if (nome === null || !nome.trim()) return;
+  const slug = criarSlug(nome);
+  if (!slug || categorias.some(c => c.slug === slug)) { mostrarToast('Já existe uma categoria com esse nome.', 'erro'); return; }
+  try {
+    await setDoc(doc(db, 'categorias', slug), { nome: nome.trim(), slug, ordem: categorias.length, criadaEm: serverTimestamp() });
+    mostrarToast('Categoria criada.', 'sucesso');
+    await carregarCategorias();
+  } catch (err) { console.error(err); mostrarToast('Erro ao criar categoria.', 'erro'); }
+}
+
+async function editarCategoria(id) {
+  const categoria = categorias.find(c => c.id === id);
+  if (!categoria) return;
+  const nome = prompt('Nome da categoria:', categoria.nome);
+  if (nome === null || !nome.trim() || nome.trim() === categoria.nome) return;
+  try {
+    await updateDoc(doc(db, 'categorias', id), { nome: nome.trim() });
+    mostrarToast('Categoria atualizada.', 'sucesso');
+    await carregarCategorias();
+    await carregarProdutos();
+  } catch (err) { console.error(err); mostrarToast('Erro ao atualizar categoria.', 'erro'); }
+}
+
+async function excluirCategoria(id, slug) {
+  try {
+    const produtosDaCategoria = await getDocs(query(collection(db, 'produtos'), where('categoria', '==', slug)));
+    if (!produtosDaCategoria.empty) { mostrarToast('Mova ou exclua os produtos desta categoria antes de removê-la.', 'erro'); return; }
+    if (!confirm('Excluir esta categoria?')) return;
+    await deleteDoc(doc(db, 'categorias', id));
+    mostrarToast('Categoria excluída.', 'sucesso');
+    await carregarCategorias();
+  } catch (err) { console.error(err); mostrarToast('Erro ao excluir categoria.', 'erro'); }
+}
+
+function criarSlug(valor) { return String(valor).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+function nomeCategoria(slug) { return categorias.find(c => c.slug === slug)?.nome || slug || '—'; }
 
 /* ── Carregar lista de produtos ── */
 async function carregarProdutos() {
@@ -121,7 +207,7 @@ async function carregarProdutos() {
 function renderizarLinha(p) {
   const imagemUrl = escaparAdmin(p.imagemUrl || '');
   const nome = escaparAdmin(p.nome || '');
-  const categoria = escaparAdmin(p.categoria || '—');
+  const categoria = escaparAdmin(nomeCategoria(p.categoria));
   return `
     <div class="produto-row">
       <img class="produto-row__thumb" src="${imagemUrl}" alt="${nome}" onerror="this.remove()" />
