@@ -7,7 +7,8 @@ import { db, storage, auth } from './firebase.js';
 import {
   signInWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  getIdTokenResult
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   collection,
@@ -53,22 +54,45 @@ loginForm?.addEventListener('submit', async e => {
 /* ════════════════════════════════════════
    MÓDULO: AUTH GUARD (painel principal)
 ════════════════════════════════════════ */
-onAuthStateChanged(auth, usuario => {
+onAuthStateChanged(auth, async usuario => {
+  const estaNoLogin = window.location.pathname.includes('login');
   // Na página de login, redireciona se já autenticado
-  if (window.location.pathname.includes('login') && usuario) {
-    window.location.href = '/admin/';
+  if (estaNoLogin && usuario) {
+    if (await usuarioEhAdmin(usuario)) window.location.href = '/admin/';
+    else {
+      await signOut(auth);
+      if (loginError) {
+        loginError.textContent = 'Esta conta não tem acesso ao painel.';
+        loginError.classList.add('visivel');
+      }
+    }
     return;
   }
   // No painel, redireciona se não autenticado
-  if (!window.location.pathname.includes('login') && !usuario && document.getElementById('admin-layout')) {
+  if (!estaNoLogin && !usuario && document.getElementById('admin-layout')) {
     window.location.href = '/admin/login.html';
     return;
   }
   // Se autenticado e no painel, inicializa tudo
   if (usuario && document.getElementById('admin-layout')) {
-    iniciarPainel(usuario);
+    if (await usuarioEhAdmin(usuario)) iniciarPainel(usuario);
+    else {
+      await signOut(auth);
+      window.location.href = '/admin/login.html';
+    }
   }
 });
+
+// Conveniência de interface; as regras do Firebase continuam sendo a barreira de segurança.
+async function usuarioEhAdmin(usuario) {
+  try {
+    const token = await getIdTokenResult(usuario, true);
+    return token.claims.admin === true;
+  } catch (erro) {
+    console.error('Não foi possível validar a permissão administrativa.', erro);
+    return false;
+  }
+}
 
 document.getElementById('btn-sair')?.addEventListener('click', async () => {
   await signOut(auth);

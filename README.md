@@ -134,11 +134,23 @@ Ao abrir o painel em um catálogo legado que já possui produtos, as categorias 
 
 As regras atuais adotam este modelo:
 
-- Produtos e categorias podem ser lidos publicamente; escrita requer autenticação.
+- Produtos e categorias podem ser lidos publicamente; escrita exige a custom claim administrativa `admin: true`.
 - Avaliações públicas só podem ser lidas quando aprovadas.
 - Qualquer visitante pode criar uma avaliação válida e não aprovada.
-- Aprovar, editar ou excluir avaliações requer autenticação.
-- Imagens em `produtos/**` são públicas; upload exige autenticação, tipo `image/*` e tamanho inferior a 5 MB.
+- Aprovar, editar ou excluir avaliações exige a custom claim administrativa `admin: true`.
+- Imagens em `produtos/**` são públicas; upload exige a custom claim administrativa `admin: true`, tipo `image/*` e tamanho inferior a 5 MB.
+
+### Atribuir acesso administrativo
+
+O painel exige a custom claim `admin: true`. Criar um usuário em Firebase Authentication **não** concede essa permissão. Atribua a claim exclusivamente em ambiente confiável, usando o Firebase Admin SDK (por exemplo, em uma função administrativa protegida ou em um script local que use uma service account):
+
+```js
+import { getAuth } from 'firebase-admin/auth';
+
+await getAuth().setCustomUserClaims('UID_DO_USUARIO', { admin: true });
+```
+
+Após a atribuição, o usuário deve sair e entrar novamente para renovar o token. As regras do Firestore e do Storage verificam `request.auth.token.admin == true`; a verificação equivalente no JavaScript do painel serve apenas para redirecionar contas sem permissão e não substitui as regras.
 
 Após alterar os arquivos de regras, publique-os no Firebase Console ou com a Firebase CLI. Alterações nesses arquivos não são aplicadas automaticamente pelo workflow de GitHub Pages.
 
