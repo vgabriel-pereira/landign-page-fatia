@@ -29,6 +29,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         Produtos
       </a>
+      <a href="#categorias" class="admin-nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 11 23l-9.59-9.59a2 2 0 0 1 0-2.82L10.59 1.4a2 2 0 0 1 2.82 0l7.18 7.18a2 2 0 0 1 0 2.83Z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
+        Categorias
+      </a>
       <a href="#avaliacoes-admin" class="admin-nav-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         Avaliações
@@ -103,12 +107,7 @@
             <div class="campo">
               <label for="categoria">Categoria *</label>
               <select id="categoria" name="categoria" required>
-                <option value="" disabled selected>Selecione…</option>
-                <option value="bolo">Bolo</option>
-                <option value="torta">Torta</option>
-                <option value="doce">Doce</option>
-                <option value="aniversario">Aniversário</option>
-                <option value="casamento">Casamento</option>
+                <option value="" disabled selected>Carregando categorias…</option>
               </select>
             </div>
           </div>
@@ -129,6 +128,18 @@
 
           <button type="submit" class="btn btn-primary">Publicar no catálogo</button>
         </form>
+      </section>
+
+      <section id="categorias" class="categorias-admin" aria-labelledby="categorias-titulo">
+        <div class="admin-section__header">
+          <div>
+            <p class="eyebrow">Organização do catálogo</p>
+            <h2 id="categorias-titulo">Categorias</h2>
+          </div>
+          <button id="btn-nova-categoria" type="button" class="btn btn-primary">Nova categoria</button>
+        </div>
+        <p class="admin-section__description">As categorias criadas aqui ficam disponíveis ao cadastrar produtos e nos filtros do catálogo.</p>
+        <div id="lista-categorias" class="categorias-lista" aria-live="polite"></div>
       </section>
 
       <!-- Lista de produtos -->

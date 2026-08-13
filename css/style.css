@@ -5,6 +5,7 @@
 
 /* ── Tokens ── */
 :root {
+  /* Design system Fatia: fundamentos reutilizáveis de interface. */
   --navy:     #1B3A5C;
   --ardosia:  #4A6B8A;
   --cerúleo:  #8BAFC8;
@@ -25,6 +26,13 @@
   --transition:  0.2s ease;
 
   --max-width: 1200px;
+
+  --ds-surface: #fff;
+  --ds-surface-subtle: #f0f4f8;
+  --ds-border: #dce4ed;
+  --ds-text-muted: var(--ardosia);
+  --ds-danger: #c53030;
+  --ds-focus-ring: 0 0 0 3px rgba(232, 201, 122, 0.4);
 }
 
 /* ── Reset ── */
