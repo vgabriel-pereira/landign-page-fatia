@@ -36,6 +36,12 @@ import {
 const loginForm  = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
 
+if (new URLSearchParams(window.location.search).get('erro') === 'sem-permissao' && loginError) {
+  loginError.textContent = 'Esta conta não tem acesso ao painel. Solicite a permissão de administradora.';
+  loginError.classList.add('visivel');
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
 loginForm?.addEventListener('submit', async e => {
   e.preventDefault();
   const email = e.target.email.value.trim();
@@ -78,7 +84,7 @@ onAuthStateChanged(auth, async usuario => {
     if (await usuarioEhAdmin(usuario)) iniciarPainel(usuario);
     else {
       await signOut(auth);
-      window.location.href = '/admin/login.html';
+      window.location.href = '/admin/login.html?erro=sem-permissao';
     }
   }
 });
