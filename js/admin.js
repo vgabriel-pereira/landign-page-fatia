@@ -56,7 +56,7 @@ loginForm?.addEventListener('submit', async e => {
     loginError?.classList.add('visivel');
   }
 });
-
+https://vgabriel-pereira.github.io/landign-page-fatia/admin/login.html
 /* ════════════════════════════════════════
    MÓDULO: AUTH GUARD (painel principal)
 ════════════════════════════════════════ */
@@ -113,6 +113,7 @@ async function iniciarPainel(usuario) {
   await carregarProdutos();
   await carregarAvaliacoes();
   iniciarUpload();
+  iniciarEdicaoProduto();
 }
 
 /* Categorias do catálogo */
@@ -149,6 +150,15 @@ function preencherSelectCategorias() {
   if (!select) return;
   const selecionada = select.value;
   select.innerHTML = '<option value="" disabled selected>Selecione…</option>' + categorias.map(c => `<option value="${escaparAdmin(c.slug)}">${escaparAdmin(c.nome)}</option>`).join('');
+  if (categorias.some(c => c.slug === selecionada)) select.value = selecionada;
+  preencherSelectEdicaoCategorias();
+}
+
+function preencherSelectEdicaoCategorias() {
+  const select = document.getElementById('editar-categoria');
+  if (!select) return;
+  const selecionada = select.value;
+  select.innerHTML = '<option value="" disabled>Selecione…</option>' + categorias.map(c => `<option value="${escaparAdmin(c.slug)}">${escaparAdmin(c.nome)}</option>`).join('');
   if (categorias.some(c => c.slug === selecionada)) select.value = selecionada;
 }
 
@@ -250,7 +260,7 @@ function renderizarLinha(p) {
           <input type="checkbox" data-toggle="${p.id}" ${p.disponivel ? 'checked' : ''} />
           <span class="toggle__track"></span>
         </label>
-        <button class="btn-icon" data-editar="${p.id}" data-nome="${nome}" data-descricao="${escaparAdmin(p.descricao || '')}" data-preco="${escaparAdmin(p.preco || '')}" data-prazo="${escaparAdmin(p.prazo || '')}" title="Editar produto">✎</button>
+        <button class="btn-icon" data-editar="${p.id}" data-nome="${nome}" data-categoria="${escaparAdmin(p.categoria || '')}" data-descricao="${escaparAdmin(p.descricao || '')}" data-preco="${escaparAdmin(p.preco || '')}" data-prazo="${escaparAdmin(p.prazo || '')}" title="Editar produto">✎</button>
         <button class="btn-icon deletar" data-deletar="${p.id}" data-storage-url="${p.storageRef || ''}" title="Excluir produto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -260,18 +270,51 @@ function renderizarLinha(p) {
     </div>`;
 }
 
-async function editarProduto(botao) {
-  const nome = prompt('Nome do produto:', botao.dataset.nome);
-  if (nome === null || !nome.trim()) return;
-  const descricao = prompt('Descrição:', botao.dataset.descricao);
-  const preco = prompt('Preço a partir de (opcional):', botao.dataset.preco);
-  const prazo = prompt('Prazo de encomenda (opcional):', botao.dataset.prazo);
-  if (descricao === null || preco === null || prazo === null) return;
+function iniciarEdicaoProduto() {
+  const modal = document.getElementById('modal-editar-produto');
+  const form = document.getElementById('form-editar-produto');
+  const fechar = () => modal?.close();
+  document.getElementById('btn-fechar-edicao')?.addEventListener('click', fechar);
+  document.getElementById('btn-cancelar-edicao')?.addEventListener('click', fechar);
+  modal?.addEventListener('click', evento => { if (evento.target === modal) fechar(); });
+  form?.addEventListener('submit', salvarEdicaoProduto);
+}
+
+function editarProduto(botao) {
+  const modal = document.getElementById('modal-editar-produto');
+  if (!modal) return;
+  document.getElementById('editar-produto-id').value = botao.dataset.editar;
+  document.getElementById('editar-nome').value = botao.dataset.nome || '';
+  document.getElementById('editar-categoria').value = botao.dataset.categoria || '';
+  document.getElementById('editar-descricao').value = botao.dataset.descricao || '';
+  document.getElementById('editar-preco').value = botao.dataset.preco || '';
+  document.getElementById('editar-prazo').value = botao.dataset.prazo || '';
+  modal.showModal();
+  document.getElementById('editar-nome').focus();
+}
+
+async function salvarEdicaoProduto(evento) {
+  evento.preventDefault();
+  const id = document.getElementById('editar-produto-id').value;
+  const nome = document.getElementById('editar-nome').value.trim();
+  const categoria = document.getElementById('editar-categoria').value;
+  const descricao = document.getElementById('editar-descricao').value.trim();
+  const preco = document.getElementById('editar-preco').value.trim();
+  const prazo = document.getElementById('editar-prazo').value.trim();
+  if (!id || !nome || !categoria) { mostrarToast('Preencha o nome e a categoria.', 'erro'); return; }
+  const botaoSalvar = evento.currentTarget.querySelector('[type="submit"]');
+  botaoSalvar.disabled = true;
+  botaoSalvar.textContent = 'Salvando…';
   try {
-    await updateDoc(doc(db, 'produtos', botao.dataset.editar), { nome: nome.trim(), descricao: descricao.trim(), preco: preco.trim(), prazo: prazo.trim() });
+    await updateDoc(doc(db, 'produtos', id), { nome, categoria, descricao, preco, prazo });
+    document.getElementById('modal-editar-produto')?.close();
     mostrarToast('Produto atualizado.', 'sucesso');
     await carregarProdutos();
   } catch (err) { console.error(err); mostrarToast('Erro ao atualizar produto.', 'erro'); }
+  finally {
+    botaoSalvar.disabled = false;
+    botaoSalvar.textContent = 'Salvar alterações';
+  }
 }
 
 /* ── Toggle disponível ── */

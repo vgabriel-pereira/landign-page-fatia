@@ -172,6 +172,40 @@
   <!-- Toast de feedback -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <!-- Edição de produto -->
+  <dialog id="modal-editar-produto" class="modal" aria-labelledby="modal-editar-produto-titulo">
+    <form id="form-editar-produto" class="modal__content" method="dialog">
+      <div class="modal__header">
+        <div>
+          <p class="eyebrow">Catálogo</p>
+          <h2 id="modal-editar-produto-titulo">Editar produto</h2>
+        </div>
+        <button id="btn-fechar-edicao" class="btn-icon" type="button" aria-label="Fechar edição">×</button>
+      </div>
+      <input id="editar-produto-id" type="hidden" />
+      <div class="campo">
+        <label for="editar-nome">Nome do produto *</label>
+        <input id="editar-nome" type="text" required />
+      </div>
+      <div class="campo">
+        <label for="editar-categoria">Categoria *</label>
+        <select id="editar-categoria" required></select>
+      </div>
+      <div class="upload-form-grid">
+        <div class="campo"><label for="editar-preco">Preço a partir de</label><input id="editar-preco" type="text" /></div>
+        <div class="campo"><label for="editar-prazo">Prazo de encomenda</label><input id="editar-prazo" type="text" /></div>
+      </div>
+      <div class="campo">
+        <label for="editar-descricao">Descrição curta</label>
+        <textarea id="editar-descricao"></textarea>
+      </div>
+      <div class="modal__actions">
+        <button id="btn-cancelar-edicao" class="btn btn-outline-navy" type="button">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Salvar alterações</button>
+      </div>
+    </form>
+  </dialog>
+
   <script type="module" src="../js/admin.js"></script>
 </body>
 </html>
