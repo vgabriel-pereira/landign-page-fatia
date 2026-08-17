@@ -261,3 +261,162 @@
   .modal__actions { flex-direction: column-reverse; }
   .modal__actions .btn { justify-content: center; width: 100%; }
 }
+
+/* ════════════════════════════════════════
+   MODAIS
+════════════════════════════════════════ */
+.modal {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  width: min(520px, 95vw);
+  box-shadow: 0 20px 60px rgba(27,58,92,0.22);
+  background: #fff;
+}
+.modal::backdrop {
+  background: rgba(27,58,92,0.55);
+  backdrop-filter: blur(3px);
+}
+.modal__content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+.modal__header .eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ardosia);
+  margin-bottom: 0.25rem;
+}
+.modal__header h2 {
+  font-size: 1.3rem;
+  font-style: italic;
+  margin: 0;
+}
+.modal__fechar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--creme);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ardosia);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.modal__fechar:hover { background: #e2e8f0; color: var(--navy); }
+
+.modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #edf2f7;
+}
+
+.modal__hint {
+  font-size: 0.8rem;
+  color: var(--cerúleo);
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Checkbox dentro de campo */
+.campo--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.65rem;
+}
+.campo--checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ardosia);
+  flex-shrink: 0;
+}
+.campo--checkbox label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--navy);
+}
+
+/* Modal de confirmação */
+.modal--confirmacao .modal__content {
+  text-align: center;
+  padding: 2.5rem 2rem;
+}
+.modal-confirmacao__icone {
+  width: 56px;
+  height: 56px;
+  background: #fff7ed;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  color: #c2410c;
+}
+.modal-confirmacao__titulo {
+  font-size: 1.2rem;
+  font-style: normal;
+  margin-bottom: 0.6rem;
+}
+.modal-confirmacao__msg {
+  font-size: 0.9rem;
+  color: var(--ardosia);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+.modal--confirmacao .modal__actions {
+  justify-content: center;
+  border-top: none;
+  padding-top: 1.5rem;
+}
+
+/* Botão de perigo */
+.btn-perigo {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+}
+.btn-perigo:hover { background: #b91c1c; }
+
+/* Badges de status nas avaliações */
+.badge-pendente-inline {
+  font-size: 0.65rem;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+.avaliacao-publicada {
+  font-size: 0.75rem;
+  color: var(--wpp);
+  font-weight: 700;
+}
+
+/* Animação de entrada dos modais */
+@keyframes modalEntrada {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal[open] {
+  animation: modalEntrada 0.2s ease;
+}
+

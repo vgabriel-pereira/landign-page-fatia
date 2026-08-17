@@ -172,7 +172,7 @@
   <!-- Toast de feedback -->
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Edição de produto -->
+  <!-- ══ Modal: Editar produto ══ -->
   <dialog id="modal-editar-produto" class="modal" aria-labelledby="modal-editar-produto-titulo">
     <form id="form-editar-produto" class="modal__content" method="dialog">
       <div class="modal__header">
@@ -180,30 +180,76 @@
           <p class="eyebrow">Catálogo</p>
           <h2 id="modal-editar-produto-titulo">Editar produto</h2>
         </div>
-        <button id="btn-fechar-edicao" class="btn-icon" type="button" aria-label="Fechar edição">×</button>
+        <button id="btn-fechar-edicao" class="modal__fechar" type="button" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
       </div>
       <input id="editar-produto-id" type="hidden" />
       <div class="campo">
         <label for="editar-nome">Nome do produto *</label>
-        <input id="editar-nome" type="text" required />
+        <input id="editar-nome" type="text" required placeholder="Ex: Torta de Ninho com Morango" />
       </div>
       <div class="campo">
         <label for="editar-categoria">Categoria *</label>
         <select id="editar-categoria" required></select>
       </div>
       <div class="upload-form-grid">
-        <div class="campo"><label for="editar-preco">Preço a partir de</label><input id="editar-preco" type="text" /></div>
-        <div class="campo"><label for="editar-prazo">Prazo de encomenda</label><input id="editar-prazo" type="text" /></div>
+        <div class="campo"><label for="editar-preco">Preço a partir de</label><input id="editar-preco" type="text" placeholder="Ex: R$ 80,00" /></div>
+        <div class="campo"><label for="editar-prazo">Prazo de encomenda</label><input id="editar-prazo" type="text" placeholder="Ex: 3 dias" /></div>
       </div>
       <div class="campo">
         <label for="editar-descricao">Descrição curta</label>
-        <textarea id="editar-descricao"></textarea>
+        <textarea id="editar-descricao" placeholder="Descreva o produto brevemente…"></textarea>
+      </div>
+      <div class="campo campo--checkbox">
+        <input type="checkbox" id="editar-destaque" />
+        <label for="editar-destaque">Marcar como "Mais pedido" no catálogo</label>
       </div>
       <div class="modal__actions">
         <button id="btn-cancelar-edicao" class="btn btn-outline-navy" type="button">Cancelar</button>
         <button class="btn btn-primary" type="submit">Salvar alterações</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- ══ Modal: Criar / Editar categoria ══ -->
+  <dialog id="modal-categoria" class="modal" aria-labelledby="modal-categoria-titulo">
+    <form id="form-categoria" class="modal__content" method="dialog">
+      <div class="modal__header">
+        <div>
+          <p class="eyebrow">Organização</p>
+          <h2 id="modal-categoria-titulo">Nova categoria</h2>
+        </div>
+        <button id="btn-fechar-categoria" class="modal__fechar" type="button" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <input id="cat-id" type="hidden" />
+      <div class="campo">
+        <label for="cat-nome">Nome da categoria *</label>
+        <input id="cat-nome" type="text" required placeholder="Ex: Tortas, Bolos, Doces…" maxlength="40" />
+      </div>
+      <p class="modal__hint">O identificador interno (slug) é gerado automaticamente a partir do nome.</p>
+      <div class="modal__actions">
+        <button id="btn-cancelar-categoria" class="btn btn-outline-navy" type="button">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ══ Modal: Confirmação de exclusão ══ -->
+  <dialog id="modal-confirmacao" class="modal modal--confirmacao" aria-labelledby="modal-confirmacao-titulo">
+    <div class="modal__content">
+      <div class="modal-confirmacao__icone" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="28" height="28"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <h2 id="modal-confirmacao-titulo" class="modal-confirmacao__titulo">Confirmar ação</h2>
+      <p id="modal-confirmacao-msg" class="modal-confirmacao__msg"></p>
+      <div class="modal__actions">
+        <button id="modal-confirmacao-nao" class="btn btn-outline-navy" type="button">Cancelar</button>
+        <button id="modal-confirmacao-sim" class="btn btn-perigo" type="button">Confirmar</button>
+      </div>
+    </div>
   </dialog>
 
   <script type="module" src="../js/admin.js"></script>
