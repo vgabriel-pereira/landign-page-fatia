@@ -26,7 +26,8 @@ service cloud.firestore {
     // - Apenas autenticado pode ATUALIZAR ou DELETAR (moderar)
     match /avaliacoes/{avaliacaoId} {
       allow read:   if resource.data.aprovada == true || isAdmin();
-      allow create: if request.resource.data.keys().hasAll(['nome','mensagem','estrelas','aprovada','criadaEm'])
+      allow create: if request.resource.data.keys().hasOnly(['nome','mensagem','estrelas','aprovada','criadaEm'])
+                    && request.resource.data.keys().hasAll(['nome','mensagem','estrelas','aprovada','criadaEm'])
                     && request.resource.data.aprovada == false
                     && request.resource.data.estrelas is int
                     && request.resource.data.estrelas >= 1
@@ -36,7 +37,8 @@ service cloud.firestore {
                     && request.resource.data.nome.size() <= 80
                     && request.resource.data.mensagem is string
                     && request.resource.data.mensagem.size() > 0
-                    && request.resource.data.mensagem.size() <= 500;
+                    && request.resource.data.mensagem.size() <= 500
+                    && request.resource.data.criadaEm == request.time;
       allow update, delete: if isAdmin();
     }
 

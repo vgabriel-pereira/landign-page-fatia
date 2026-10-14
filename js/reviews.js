@@ -9,8 +9,11 @@ import {
   addDoc,
   query,
   where,
+  orderBy,
   getDocs,
-  serverTimestamp
+  serverTimestamp,
+  limit,
+  startAfter
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ── Elementos ── */
@@ -23,6 +26,9 @@ const inputMsg    = document.getElementById('av-mensagem');
 const contadorMsg = document.getElementById('contador-msg');
 
 let estrelaSelecionada = 0;
+const TAMANHO_PAGINA = 12;
+let ultimoDocumento = null;
+let carregandoMais = false;
 
 /* ── Inicialização ── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,15 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── Carregar avaliações aprovadas ── */
 async function carregarAvaliacoes() {
   if (!grid) return;
+  ultimoDocumento = null;
+  document.getElementById('av-carregar-mais')?.remove();
   grid.innerHTML = `<div class="av-loading"><div class="spinner"></div></div>`;
 
   try {
     const q = query(
       collection(db, 'avaliacoes'),
       where('aprovada', '==', true),
-      // Ordenação no navegador: esta consulta só precisa do filtro simples.
+      orderBy('criadaEm', 'desc'),
     );
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(query(q, limit(TAMANHO_PAGINA)));
+    ultimoDocumento = snapshot.docs[snapshot.docs.length - 1] || null;
     const lista = snapshot.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.criadaEm?.toMillis?.() ?? 0) - (a.criadaEm?.toMillis?.() ?? 0));
@@ -56,11 +65,41 @@ async function carregarAvaliacoes() {
     }
 
     grid.innerHTML = lista.map(av => renderizarCard(av)).join('');
+    configurarBotaoMais(snapshot.size === TAMANHO_PAGINA);
 
   } catch (err) {
     console.error('Erro ao carregar avaliações:', err);
     grid.innerHTML = `<p class="av-vazio">Não foi possível carregar as avaliações.</p>`;
   }
+}
+
+function configurarBotaoMais(mostrar) {
+  let botao = document.getElementById('av-carregar-mais');
+  if (!mostrar) { botao?.remove(); return; }
+  if (!botao) {
+    botao = document.createElement('button');
+    botao.id = 'av-carregar-mais'; botao.type = 'button';
+    botao.className = 'btn btn-outline'; botao.textContent = 'Carregar mais avaliações';
+    grid.after(botao);
+  }
+  botao.hidden = false;
+  botao.onclick = carregarMaisAvaliacoes;
+}
+
+async function carregarMaisAvaliacoes() {
+  const botao = document.getElementById('av-carregar-mais');
+  if (!ultimoDocumento || carregandoMais) return;
+  carregandoMais = true;
+  if (botao) { botao.disabled = true; botao.textContent = 'Carregando…'; }
+  try {
+    const snapshot = await getDocs(query(collection(db, 'avaliacoes'), where('aprovada', '==', true), orderBy('criadaEm', 'desc'), startAfter(ultimoDocumento), limit(TAMANHO_PAGINA)));
+    ultimoDocumento = snapshot.docs[snapshot.docs.length - 1] || null;
+    grid.insertAdjacentHTML('beforeend', snapshot.docs.map(d => renderizarCard({ id: d.id, ...d.data() })).join(''));
+    configurarBotaoMais(snapshot.size === TAMANHO_PAGINA);
+  } catch (err) {
+    console.error('Erro ao carregar mais avaliações:', err);
+    if (botao) { botao.disabled = false; botao.textContent = 'Tentar carregar novamente'; }
+  } finally { carregandoMais = false; }
 }
 
 function renderizarCard(av) {
@@ -135,9 +174,11 @@ function iniciarFormulario() {
 
     // Validações
     if (honeypot) return;
-    const ultimoEnvio = Number(localStorage.getItem('fatia-avaliacao-enviada-em') || 0);
+    let ultimoEnvio = 0;
+    try { ultimoEnvio = Number(localStorage.getItem('fatia-avaliacao-enviada-em') || 0); } catch {}
     if (Date.now() - ultimoEnvio < 60000) { mostrarErro(erroEl, 'Aguarde um minuto antes de enviar outra avaliação.'); return; }
     if (!nome) { mostrarErro(erroEl, 'Por favor, informe seu nome.'); return; }
+    if (nome.length > 80) { mostrarErro(erroEl, 'O nome deve ter no máximo 80 caracteres.'); return; }
     if (estrelaSelecionada === 0) { mostrarErro(erroEl, 'Selecione pelo menos 1 estrela.'); return; }
     if (!mensagem) { mostrarErro(erroEl, 'Escreva uma mensagem antes de enviar.'); return; }
     if (mensagem.length > 500) { mostrarErro(erroEl, 'A mensagem deve ter no máximo 500 caracteres.'); return; }
@@ -156,7 +197,7 @@ function iniciarFormulario() {
         aprovada:  false,           // Vai para moderação antes de aparecer
         criadaEm:  serverTimestamp()
       });
-      localStorage.setItem('fatia-avaliacao-enviada-em', String(Date.now()));
+      try { localStorage.setItem('fatia-avaliacao-enviada-em', String(Date.now())); } catch {}
 
       // Mostra mensagem de sucesso e esconde o form
       form.style.display = 'none';
@@ -164,7 +205,9 @@ function iniciarFormulario() {
 
     } catch (err) {
       console.error(err);
-      mostrarErro(erroEl, 'Erro ao enviar. Tente novamente em instantes.');
+      mostrarErro(erroEl, err?.code === 'permission-denied'
+        ? 'A avaliação não foi aceita. Confira os campos e tente novamente.'
+        : 'Erro ao enviar. Tente novamente em instantes.');
       btnEnviar.disabled = false;
       btnEnviar.textContent = 'Enviar avaliação';
     }

@@ -45,13 +45,30 @@ loginForm?.addEventListener('submit', async e => {
 /* ════════════════════════════════════════
    MÓDULO: AUTH GUARD
 ════════════════════════════════════════ */
-onAuthStateChanged(auth, usuario => {
+onAuthStateChanged(auth, async usuario => {
   const estaNoLogin = window.location.pathname.includes('login');
-  if (estaNoLogin && usuario) { window.location.href = '../admin/'; return; }
+  if (usuario) {
+    try {
+      const token = await usuario.getIdTokenResult();
+      if (token.claims.admin !== true) {
+        if (!estaNoLogin) { await signOut(auth); window.location.replace('../admin/login.html?acesso=negado'); }
+        else {
+          await signOut(auth);
+          if (loginError) { loginError.textContent = 'Esta conta não possui acesso administrativo.'; loginError.classList.add('visivel'); }
+        }
+        return;
+      }
+      if (estaNoLogin) { window.location.replace('../admin/'); return; }
+      if (document.getElementById('admin-layout')) iniciarPainel();
+    } catch (err) {
+      console.error('Falha ao verificar a permissão administrativa.');
+      if (!estaNoLogin) { await signOut(auth).catch(() => {}); window.location.replace('../admin/login.html?acesso=erro'); }
+    }
+    return;
+  }
   if (!estaNoLogin && !usuario && document.getElementById('admin-layout')) {
     window.location.href = '../admin/login.html'; return;
   }
-  if (usuario && document.getElementById('admin-layout')) iniciarPainel();
 });
 
 document.getElementById('btn-sair')?.addEventListener('click', async () => {
@@ -333,14 +350,20 @@ async function excluirProduto(id, storageRefsJson) {
   });
   if (!ok) return;
   try {
+    const refs = JSON.parse(storageRefsJson || '[]').filter(Boolean);
+    const resultados = await Promise.allSettled(refs.map(r => deleteObject(ref(storage, r))));
+    if (resultados.some(r => r.status === 'rejected')) {
+      console.error('Falha ao remover uma ou mais imagens do produto.');
+      mostrarToast('Não foi possível remover todas as imagens. O produto foi mantido para nova tentativa.', 'erro');
+      return;
+    }
     await deleteDoc(doc(db, 'produtos', id));
-    try {
-      const refs = JSON.parse(storageRefsJson || '[]');
-      await Promise.all(refs.filter(Boolean).map(r => deleteObject(ref(storage, r)).catch(() => {})));
-    } catch {}
     mostrarToast('Produto excluído.', 'sucesso');
     await carregarProdutos();
-  } catch { mostrarToast('Erro ao excluir produto.', 'erro'); }
+  } catch (err) {
+    console.error('Erro ao excluir produto ou imagens.');
+    mostrarToast('Erro ao excluir. Verifique o produto e as imagens antes de tentar novamente.', 'erro');
+  }
 }
 
 /* ════════════════════════════════════════
@@ -419,16 +442,22 @@ function iniciarUpload() {
 
   function selecionar(files) {
     if (!files.length) return;
-    if (files.some(f => !f.type.startsWith('image/'))) { mostrarToast('Selecione apenas imagens.', 'erro'); return; }
-    if (files.some(f => f.size > 5 * 1024 * 1024)) { mostrarToast('Cada imagem deve ter no máximo 5MB.', 'erro'); return; }
     const existentes = new Set(arquivos.map(f => `${f.name}-${f.size}-${f.lastModified}`));
-    arquivos = [...arquivos, ...files.filter(f => !existentes.has(`${f.name}-${f.size}-${f.lastModified}`))];
+    const novos = files.filter(f => !existentes.has(`${f.name}-${f.size}-${f.lastModified}`));
+    const candidatos = [...arquivos, ...novos];
+    const formatos = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    if (candidatos.length > 5) { mostrarToast('Cada produto pode ter no máximo 5 imagens.', 'erro'); return; }
+    if (candidatos.some(f => !formatos.has(f.type))) { mostrarToast('Use somente imagens JPEG, PNG ou WebP.', 'erro'); return; }
+    if (candidatos.some(f => f.size >= 5 * 1024 * 1024)) { mostrarToast('Cada imagem deve ter menos de 5 MB.', 'erro'); return; }
+    if (candidatos.reduce((total, f) => total + f.size, 0) > 20 * 1024 * 1024) { mostrarToast('O total das imagens não pode ultrapassar 20 MB.', 'erro'); return; }
+    arquivos = candidatos;
     renderPreviews();
     preview?.classList.add('visivel');
     inputFile.value = '';
   }
 
   function renderPreviews() {
+    previewImgs.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
     previewImgs.innerHTML = arquivos.map((f, i) =>
       `<div class="preview-item">
         <img src="${URL.createObjectURL(f)}" alt="Prévia ${i+1}">
@@ -455,18 +484,27 @@ function iniciarUpload() {
     const btn = form.querySelector('[type="submit"]');
     btn.disabled = true; btn.textContent = 'Enviando…';
 
+    const refsEnviados = [];
     try {
       const base = Date.now();
       const uploads = arquivos.map((arquivo, i) => new Promise((resolve, reject) => {
-        const sRef = ref(storage, `produtos/${base}_${i}_${arquivo.name}`);
+        const extensao = arquivo.type === 'image/jpeg' ? 'jpg' : arquivo.type === 'image/png' ? 'png' : 'webp';
+        const sRef = ref(storage, `produtos/${base}_${i}.${extensao}`);
         const task = uploadBytesResumable(sRef, arquivo);
         task.on('state_changed',
           snap => { if (progressBar) progressBar.value = Math.round(((i + snap.bytesTransferred/snap.totalBytes) / arquivos.length) * 100); },
           reject,
-          async () => resolve({ url: await getDownloadURL(sRef), storageRef: sRef.fullPath })
+          async () => {
+            refsEnviados.push(sRef.fullPath);
+            try { resolve({ url: await getDownloadURL(sRef), storageRef: sRef.fullPath }); }
+            catch (err) { reject(err); }
+          }
         );
       }));
-      const imagens = await Promise.all(uploads);
+      const resultados = await Promise.allSettled(uploads);
+      const falhaUpload = resultados.find(r => r.status === 'rejected');
+      if (falhaUpload) throw falhaUpload.reason;
+      const imagens = resultados.map(r => r.value);
       const ordem = (await getDocs(collection(db, 'produtos'))).size + 1;
 
       await addDoc(collection(db, 'produtos'), {
@@ -487,6 +525,12 @@ function iniciarUpload() {
       await carregarProdutos();
     } catch (err) {
       console.error(err);
+      const cleanup = await Promise.allSettled(refsEnviados.map(path => deleteObject(ref(storage, path))));
+      if (cleanup.some(r => r.status === 'rejected')) {
+        console.error('Falha na limpeza compensatória de arquivos enviados.');
+        mostrarToast('Falha ao salvar. Alguns arquivos podem permanecer no Storage; contate um administrador.', 'erro');
+        return;
+      }
       mostrarToast('Erro ao salvar produto. Tente novamente.', 'erro');
     } finally {
       btn.disabled = false; btn.textContent = 'Publicar no catálogo';
