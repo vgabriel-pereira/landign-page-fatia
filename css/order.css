@@ -1,0 +1,20 @@
+.pedido { padding: 5rem 0; background: var(--ds-surface-subtle); scroll-margin-top: 1rem; }
+.pedido__layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 2rem; align-items: start; }
+.pedido [hidden] { display: none; }
+.pedido__campos, .pedido__resumo { min-width: 0; padding: 2rem; border-radius: var(--radius-lg); background: var(--ds-surface); box-shadow: var(--shadow-card); }
+.pedido fieldset { border: 0; min-width: 0; margin-top: 1.5rem; }
+.pedido legend { font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 1.25rem; }
+.pedido__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }
+.pedido__campo { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; }
+.pedido__campo label { font-size: .85rem; font-weight: 700; }
+.pedido__campo input, .pedido__campo select, .pedido__campo textarea { width: 100%; min-width: 0; padding: .8rem; border: 1px solid var(--ds-border); border-radius: var(--radius-md); background: var(--ds-surface); color: var(--navy); font: inherit; }
+.pedido__campo textarea { resize: vertical; min-height: 110px; }
+.pedido__campo small, .pedido__ajuda { font-size: .8rem; color: var(--ardosia); line-height: 1.6; }
+.pedido__eyebrow { font-size: .75rem; color: var(--ardosia); margin-bottom: .75rem; }
+.pedido__resumo h3 { font-size: 1.5rem; margin-bottom: 1.25rem; }
+.pedido__texto { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .95rem; }
+.pedido__aviso { padding: 1rem 0; margin: 1rem 0; border-top: 1px solid var(--ds-border); font-size: .85rem; color: var(--ardosia); }
+.pedido__resumo .btn { width: 100%; justify-content: center; line-height: 1.6; margin-bottom: 1rem; }
+.pedido__erro { color: var(--ds-danger); margin-bottom: 1rem; }
+@media (max-width: 800px) { .pedido__layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .pedido__grid { grid-template-columns: minmax(0, 1fr); } .pedido__campos, .pedido__resumo { padding: 1.25rem; } }
