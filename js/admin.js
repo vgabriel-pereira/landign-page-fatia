@@ -308,10 +308,11 @@ function renderizarLinha(p) {
       <div class="produto-row__info">
         <div class="produto-row__nome">${esc(p.nome||'')}</div>
         <div class="produto-row__cat">${esc(nomeCategoria(p.categoria))}</div>
+        ${p.exclusaoPendente ? '<div class="produto-row__cat">Exclusão pendente — use excluir para tentar novamente</div>' : ''}
       </div>
       <div class="produto-row__acoes">
         <label class="toggle" title="${p.disponivel ? 'Visível no catálogo' : 'Oculto do catálogo'}">
-          <input type="checkbox" data-toggle="${p.id}" ${p.disponivel ? 'checked' : ''} />
+          <input type="checkbox" data-toggle="${p.id}" ${p.disponivel ? 'checked' : ''} ${p.exclusaoPendente ? 'disabled' : ''} />
           <span class="toggle__track"></span>
         </label>
         <button class="btn-icon" type="button"
@@ -322,7 +323,7 @@ function renderizarLinha(p) {
           data-preco="${esc(p.preco||'')}"
           data-prazo="${esc(p.prazo||'')}"
           data-destaque="${p.destaque ? '1' : ''}"
-          title="Editar produto">
+          title="Editar produto" ${p.exclusaoPendente ? 'disabled' : ''}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </button>
         <button class="btn-icon deletar" type="button"
@@ -350,11 +351,15 @@ async function excluirProduto(id, storageRefsJson) {
   });
   if (!ok) return;
   try {
+    await updateDoc(doc(db, 'produtos', id), { disponivel: false, exclusaoPendente: true });
+    await carregarProdutos();
     const refs = JSON.parse(storageRefsJson || '[]').filter(Boolean);
     const resultados = await Promise.allSettled(refs.map(r => deleteObject(ref(storage, r))));
-    if (resultados.some(r => r.status === 'rejected')) {
+    const falhas = resultados.filter(r => r.status === 'rejected' && r.reason?.code !== 'storage/object-not-found');
+    if (falhas.length) {
       console.error('Falha ao remover uma ou mais imagens do produto.');
-      mostrarToast('Não foi possível remover todas as imagens. O produto foi mantido para nova tentativa.', 'erro');
+      mostrarToast('Exclusão parcial. O produto foi ocultado e marcado para nova tentativa.', 'erro');
+      await carregarProdutos();
       return;
     }
     await deleteDoc(doc(db, 'produtos', id));

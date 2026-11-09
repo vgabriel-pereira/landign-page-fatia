@@ -10,6 +10,7 @@ O projeto é uma aplicação estática: não há dependências locais, `package.
 - Catálogo público carregado do Firestore, com filtros de categorias dinâmicas.
 - Galeria de imagens por produto, carrossel nos cards e lightbox com suporte a teclado.
 - Encomenda de cada produto pelo WhatsApp, já com nome, preço e prazo no texto.
+- Seção “Monte seu pedido”: preferências, data, recebimento e resumo para solicitar orçamento personalizado pelo WhatsApp, sem persistir os dados no site.
 - Formulário público de avaliações, com seleção de estrelas, limite de caracteres, honeypot e intervalo local de um minuto entre envios.
 - Moderação de avaliações no painel: aprovar ou excluir.
 - Login administrativo por e-mail e senha do Firebase Authentication.
@@ -175,10 +176,19 @@ Para habilitar o Pages no repositório, use **Settings > Pages > Source: GitHub 
 
 ## Verificações disponíveis
 
-Não há suíte automatizada nem processo de build configurados. Como verificação mínima dos módulos JavaScript:
+Não há processo de build. Os testes do pedido personalizado usam apenas o Node, sem instalar dependências:
+
+```powershell
+node --test tests/order.test.cjs
+```
+
+Esses testes simulam o DOM para verificar validação, campos condicionais, mensagem e entradas maliciosas; não substituem testes em um navegador real. O relatório da implementação está em `docs/pedido-personalizado.md`.
+
+Como verificação mínima dos módulos JavaScript:
 
 ```powershell
 node --check js/admin.js
 node --check js/catalog.js
 node --check js/reviews.js
+node --check js/order.js
 ```
